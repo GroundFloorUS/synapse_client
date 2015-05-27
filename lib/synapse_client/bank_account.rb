@@ -31,6 +31,10 @@ module SynapseClient
     def self.api_resource_name
       "bank"
     end
+    
+    def self.statuses
+      response = SynapseClient.request(:get, url + "add", params)
+    end
 
     def self.all(params={})
       bank_accounts = list(params).banks
@@ -41,6 +45,12 @@ module SynapseClient
       response = SynapseClient.request(:post, url + "add", params)
       return response unless response.successful?
       BankAccount.new(response.data.bank)
+    end
+
+    def self.remove(params={})
+      response = SynapseClient.request(:post, url + "delete", params)
+      return response unless response.successful?
+      true
     end
 
     def self.link(params={})

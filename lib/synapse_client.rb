@@ -6,6 +6,7 @@ require "synapse_client/api_resource"
 require "synapse_client/api_operations/response"
 require "synapse_client/api_operations/list"
 require "synapse_client/bank_account"
+require "synapse_client/bank_status"
 require "synapse_client/error"
 require "synapse_client/merchant"
 require "synapse_client/mfa"
@@ -15,11 +16,13 @@ require "synapse_client/security_question"
 require "synapse_client/customer"
 require "synapse_client/util"
 require "synapse_client/version"
+require "synapse_client/deposit"
+require "synapse_client/withdrawl"
 
 module SynapseClient
 
   class << self
-    attr_accessor :client_id, :client_secret
+    attr_accessor :client_id, :client_secret, :webhook
     attr_accessor :merchant_oauth_key, :merchant_email, :merchant_synapse_id
     attr_accessor :dev
     alias_method :dev?, :dev

@@ -46,6 +46,12 @@ module SynapseClient
       instance
     end
 
+    def update_attributes(options={})
+      options.each do |key, value| 
+        self.send("#{key}=", value) if self.respond_to?"#{key}="
+      end
+    end
+
     #
     def successful?
       true

@@ -29,7 +29,8 @@ module SynapseClient
     end
 
     def self.create(params={})
-      response = SynapseClient.request(:post, url + "add", params)
+      puts "SynapsePay Order Creation: #{params}"
+      response = SynapseClient.request(:post, url + "add", params.merge(status_url: SynapseClient.webhook))
 
       return response unless response.successful?
       Order.new(response.data.order)
@@ -44,19 +45,9 @@ module SynapseClient
     end
 
     def update_attributes(options)
-      @status        = options[:status]
-      @amount        = options[:amount]
-      @seller_email  = options[:seller_email]
-      @bank_pay      = options[:bank_pay]
-      @bank_id       = options[:bank_id]
-      @note          = options[:note]
-      @date_settled  = options[:date_settled]
-      @date          = options[:date]
-      @id            = options[:id]
-      @ticket_number = options[:ticket_number]
-      @resource_uri  = options[:resource_uri]
-      @account_type  = options[:account_type]
-      @fee           = options[:fee]
+      super(options)
+      
+      # TODO fix this bad code
       @seller_id     = options[:seller_id] || options[:seller].delete("seller_id") rescue nil
     end
 

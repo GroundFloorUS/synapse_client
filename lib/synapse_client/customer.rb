@@ -1,6 +1,7 @@
 
 module SynapseClient
   class Customer < APIResource
+    include SynapseClient::APIOperations::List
 
     attr_accessor :email, :fullname, :phonenumber, :ip_address
     attr_accessor :access_token, :refresh_token, :expires_in
@@ -31,6 +32,12 @@ module SynapseClient
     def self.create(opts={})
       Customer.new(opts).create
     end
+    
+    def self.list(search="")
+      headers  = {"REMOTE_ADDR" => @ip_address}
+      response = SynapseClient.request(:post, url + "search", {}, headers)
+      return response
+    end
 
     def create
       headers  = {"REMOTE_ADDR" => @ip_address}
@@ -39,14 +46,19 @@ module SynapseClient
       return response unless response.successful?
       update_attributes(response.data)
     end
+    
+    def update(params={})
+      response = SynapseClient.request(:post, url + "edit", params.merge({:access_token => access_token}))
+      return response unless response.successful?
+      update_attributes(response.data)
+    end
 
-    def self.retrieve(access_token, refresh_token)
+    def self.retrieve(access_token)
       response = SynapseClient.request(:post, url + "show", {:access_token => access_token})
 
       return response unless response.successful?
       Customer.new(response.data.user.merge({
-        :access_token  => access_token,
-        :refresh_token => refresh_token
+        :access_token  => access_token
       }))
     end
 
@@ -59,6 +71,16 @@ module SynapseClient
     def bank_accounts
       BankAccount.all({:access_token => @access_token})
     end
+    
+    
+    # Bank methods for customer
+    def find_bank_account_id(id=nil)
+      return bank_accounts unless id.present?
+      bank_accounts.each do |bank_account|
+        return bank_account if bank_account.id == id
+      end
+    end
+    
     def primary_bank_account
       @bank_accounts.select{|ba| ba.is_buyer_default}.first
     end
@@ -68,6 +90,14 @@ module SynapseClient
         :access_token => @access_token,
         :fullname     => @fullname
       }))
+    end
+
+    def remove_bank_account(bank_id=nil)
+      raise ArgumentException, "No Synapsepay Bank Account ID Passed To Remove Method" unless bank_id.present?
+      BankAccount.remove({
+        access_token: @access_token,
+        bank_id: bank_id
+      })
     end
 
     def link_bank_account(params={})
@@ -87,14 +117,40 @@ module SynapseClient
       Order.all({:access_token => @access_token})
     end
 
+    def deposit_status(params={})
+      Deposit.show(params.merge({
+        :access_token => @access_token
+      }))
+    end
+
+    def deposit(params={})
+      Deposit.link(params.merge({
+        :access_token => @access_token
+      }))
+    end
+
+    def add_micro_deposits(params={})
+      Deposit.micro(params.merge({
+        :access_token => @access_token
+      }))
+    end
+
+    def withdrawl(params={})
+      Withdrawl.link(params.merge({
+        :access_token => @access_token
+      }))
+    end
+
+
     def add_order(params={})
       if SynapseClient.merchant_synapse_id.nil?
         raise ArgumentError.new("You need to set SynapseClient.merchant_synapse_id before you can submit orders.")
       else
         Order.create(params.merge({
-          :access_token => @access_token,
-          :seller_id    => SynapseClient.merchant_synapse_id,
-          :bank_pay     => "yes"        # see README.md
+          access_token: @access_token,
+          seller_id: SynapseClient.merchant_synapse_id,
+          bank_pay: "yes",
+          status_url: SynapseClient.webhook
         }))
       end
     end
@@ -131,17 +187,7 @@ module SynapseClient
       request.post
     end
 =end
-
-
-private
-    def update_attributes(data)
-      @id            = data.user_id
-      @access_token  = data.access_token
-      @refresh_token = data.refresh_token
-      @expires_in    = data.expires_in
-      @username      = data.username
-      return self
-    end
-
   end
 end
+
+

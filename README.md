@@ -13,6 +13,11 @@ I originally wrote this in a rails app of mine and stripped this out. There's so
   * that this gem says "Customers" when Synapse says "Users"
   * all orders are bank pay orders
   * customers do not have passwords
+  
+## Things to remeber
+* oauth_consumer_key: is who is initiating the transaction, or who owns the from bank account.
+* bank_id: is the from bank account for the transcation.
+* seller_id: is who owns the to bank account.
 
 ## Installation
 
